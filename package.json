@@ -1,0 +1,32 @@
+{
+  "name": "hrdhat-backend",
+  "version": "1.0.0",
+  "description": "Supabase backend for HrdHat Daily Safety Form Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "supabase start",
+    "stop": "supabase stop",
+    "reset": "supabase db reset",
+    "migrate": "supabase migration new",
+    "deploy": "supabase db push",
+    "functions:deploy": "supabase functions deploy",
+    "functions:serve": "supabase functions serve",
+    "link": "supabase link",
+    "status": "supabase status"
+  },
+  "keywords": [
+    "supabase",
+    "backend",
+    "safety-forms",
+    "construction",
+    "flra"
+  ],
+  "author": "HrdHat Team",
+  "license": "MIT",
+  "devDependencies": {
+    "supabase": "^2.23.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
