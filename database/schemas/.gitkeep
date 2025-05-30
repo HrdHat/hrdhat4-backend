@@ -1,0 +1,5 @@
+# Schemas Directory
+
+This directory will contain SQL schema files for documentation and reference.
+
+Files will be created as we design and implement the database structure. 

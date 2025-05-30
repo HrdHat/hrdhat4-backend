@@ -1,0 +1,5 @@
+# Migrations Directory
+
+This directory will contain migration documentation and SQL files.
+
+Files will be created as we apply database changes via MCP connection. 

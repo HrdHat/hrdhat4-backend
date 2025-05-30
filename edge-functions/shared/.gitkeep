@@ -1,0 +1,5 @@
+# Shared Edge Function Utilities
+
+This directory will contain shared TypeScript types and utilities used across multiple Edge Functions.
+
+Files will be created as we develop common functionality for our Edge Functions. 
