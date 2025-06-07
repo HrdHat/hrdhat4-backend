@@ -185,6 +185,8 @@ Let me propose our first backend setup session:
 5. **Debugging**: Check logs when forms aren't saving properly
 6. **Types**: Generate TypeScript interfaces from your database
 
+> **Planned Enhancement:** In Phase 2, a GIN index will be added to JSONB columns (form_definitions, form_instances) to support recall and advanced search. See form-plan/README.md and appplansteps.md for details.
+
 ---
 
 **Status**: Proposal - Awaiting approval to begin implementation
