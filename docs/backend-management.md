@@ -183,7 +183,7 @@ Let me propose our first backend setup session:
 3. **Migrations**: Add new columns for form features
 4. **Development**: Create a branch to test new form modules
 5. **Debugging**: Check logs when forms aren't saving properly
-6. **Types**: Generate TypeScript interfaces from your database
+6. **Types**: Generate minimal system types (no rigid form interfaces - using dynamic typing)
 
 > **Planned Enhancement:** In Phase 2, a GIN index will be added to JSONB columns (form_definitions, form_instances) to support recall and advanced search. See form-plan/README.md and appplansteps.md for details.
 

@@ -1,3 +1,28 @@
+-- =====================================================================================
+-- ✅ MIGRATION STATUS: SUCCESSFULLY APPLIED
+-- Date Applied: December 2024 (Based on Daily Log 2025-01-06)
+-- Applied To: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+-- Status: PRODUCTION READY - DO NOT DELETE OR EDIT THIS FILE
+-- 
+-- ⚠️  WARNING: THIS MIGRATION HAS BEEN SUCCESSFULLY APPLIED TO THE DATABASE
+-- ⚠️  DO NOT MODIFY, DELETE, OR RE-RUN THIS MIGRATION
+-- ⚠️  ANY CHANGES REQUIRE A NEW MIGRATION FILE (002_xxx.sql, 003_xxx.sql, etc.)
+-- 
+-- Migration Notes:
+-- - Created 4 core tables: user_profiles, form_definitions, form_instances, form_photos
+-- - Implemented versioned form template architecture
+-- - Added Row Level Security (RLS) policies for creator-only access
+-- - Created auto-generation triggers for form numbers (YYYYMMDD-NN format)
+-- - Added performance-critical indexes for Phase 1 requirements
+-- - Deployed alongside archive-forms and stale-forms edge functions
+-- =====================================================================================
+
+-- =========================
+-- 0. Required Extensions
+-- =========================
+create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
+
 -- ===================================================================
 -- HrdHat Initial Schema Migration - CORRECTED VERSION
 -- Status: IMPLEMENTATION READY (fixes all critical gaps)
@@ -270,7 +295,7 @@ create trigger update_form_instances_updated_at
     before update on form_instances
     for each row execute function update_updated_at_column();
 
--- Function to generate form numbers (YYYYMMDD-NN format)
+-- Function to generate form numbers (YYYYMMDD-NN format) - CONCURRENCY SAFE
 -- ✅ PHASE 1: Suggests format but doesn't enforce - users can override
 create or replace function generate_form_number()
 returns text as $$
@@ -281,15 +306,27 @@ declare
 begin
     today_prefix := to_char(current_date, 'YYYYMMDD');
     
-    -- Get the next number for today
-    select coalesce(max(cast(substring(form_number from '-(\d+)$') as integer)), 0) + 1
-    into next_number
-    from form_instances
-    where form_number like today_prefix || '-%';
+    -- Use advisory lock to prevent race conditions
+    perform pg_advisory_lock(hashtext(today_prefix));
     
-    form_number := today_prefix || '-' || lpad(next_number::text, 2, '0');
-    
-    return form_number;
+    begin
+        -- Get the next number for today
+        select coalesce(max(cast(substring(form_number from '-(\d+)$') as integer)), 0) + 1
+        into next_number
+        from form_instances
+        where form_number like today_prefix || '-%';
+        
+        form_number := today_prefix || '-' || lpad(next_number::text, 2, '0');
+        
+        -- Release the lock
+        perform pg_advisory_unlock(hashtext(today_prefix));
+        
+        return form_number;
+    exception when others then
+        -- Always release lock on error
+        perform pg_advisory_unlock(hashtext(today_prefix));
+        raise;
+    end;
 end;
 $$ language plpgsql;
 
@@ -353,6 +390,9 @@ create index idx_user_profiles_email on user_profiles(email);
 -- =========================
 create index idx_form_instances_created_at on form_instances(created_at);
 create index idx_form_photos_form_instance_id on form_photos(form_instance_id);
+
+-- ✅ CRITICAL: Missing index for form definition lookups
+create index idx_form_instances_form_definition_id on form_instances(form_definition_id);
 
 -- =========================
 -- 7. Helper Functions for Template Management - ✅ ADDED

@@ -168,6 +168,49 @@ If you encounter git problems:
 
 This backend is managed via Supabase MCP connection configured in `.cursor/mcp.json`.
 
+## 🔑 Signature Role Definitions
+
+The form signature system supports flexible role definitions sent by the frontend via the `signer_role` field:
+
+### Core Roles
+
+- **`worker`** - General construction worker
+- **`supervisor`** - Site supervisor or team lead
+- **`management`** - Project management or company management
+- **`safety_officer`** - Dedicated safety personnel
+- **`foreman`** - Construction foreman
+- **`apprentice`** - Apprentice or trainee worker
+- **`subcontractor`** - External contractor personnel
+- **`inspector`** - Quality or safety inspector
+
+### Implementation Notes
+
+- **Frontend Flexibility**: Frontend can send any string value for `signer_role`
+- **Database Storage**: All roles stored as text - no database validation constraints
+- **Legacy Compatibility**: `signer_type` field maintained for backwards compatibility (worker/supervisor only)
+- **Role Grouping**: Frontend groups roles into logical categories (workers vs. supervisors) for UI display
+- **Custom Roles**: Organizations can define custom roles as needed (e.g., 'crane_operator', 'safety_coordinator')
+
+### Database Structure
+
+```sql
+-- form_signatures table
+signer_type: text,  -- legacy: 'worker' | 'supervisor'
+signer_role: text,  -- flexible: any role string from frontend
+```
+
+### Usage Example
+
+```javascript
+// Frontend sends flexible role data
+const signatureData = {
+  signer_name: "John Smith",
+  signer_type: "worker", // maps to legacy categories
+  signer_role: "crane_operator", // specific role for this signature
+  // ... other fields
+};
+```
+
 ## 📖 Documentation
 
 For detailed backend documentation, see the `docs/` directory.

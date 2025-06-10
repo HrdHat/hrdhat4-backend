@@ -1,25 +1,27 @@
 # FLRA Module Definitions Reference
 
-## Source File
+**Status**: Implementation Ready  
+**Last Updated**: January 6, 2025  
+**Source**: FlraFormPlan.Md  
+**Purpose**: Simple field definitions for all FLRA form modules
 
-**Location**: `c:\Users\Pawel\HRDhat\HRDhat\HrdHatFLRApdf.html`
-**Purpose**: Complete FLRA form structure with exact field definitions for JSONB schema implementation
+---
 
-## Module Structure Analysis
+## Module Structure
 
 ### 1. General Information Module
 
 ```typescript
 generalInformation: {
-  projectName: string;
-  taskLocation: string;
-  supervisorName: string;
-  supervisorContact: string;
-  todaysDate: string; // ISO date string
-  crewMembers: number;
-  todaysTask: string;
-  startTime: string; // HH:MM format
-  endTime: string; // HH:MM format
+  projectName: string; // Project Name
+  taskLocation: string; // Task Location
+  supervisorName: string; // Supervisor's Name
+  supervisorContact: string; // Supervisor's Contact #
+  todaysDate: string; // Today's Date (YYYY-MM-DD)
+  crewMembers: string; // # of Crew Members
+  todaysTask: string; // Today's Task
+  startTime: string; // Start Time (HH:mm)
+  endTime: string; // End Time (HH:mm)
 }
 ```
 
@@ -27,26 +29,26 @@ generalInformation: {
 
 ```typescript
 preJobChecklist: {
-  wellRestedAndFit: boolean;
-  trainedAndCompetent: boolean;
-  reviewedWorkArea: boolean;
-  inspectedTools: boolean;
-  requiredPPE: boolean;
-  reviewedControlMeasures: boolean;
-  equipmentInspectionUpToDate: boolean;
-  reviewedEmergencyProcedures: boolean;
-  completedFLRA: boolean;
-  requiredPermitsInPlace: boolean;
-  safetySignageInstalled: boolean;
-  communicatedWithCrew: boolean;
-  workingAlone: boolean;
-  needForSpotters: boolean;
-  allRequiredPermits: boolean;
-  weatherSuitable: boolean;
-  barricadesInstalled: boolean;
-  knowFirstAidAttendant: boolean;
-  clearAccessToExits: boolean;
-  awareOfSiteNotices: boolean;
+  wellRested: boolean; // Are you well-rested and fit for duty?
+  trainedCompetent: boolean; // Are you trained and competent for your tasks today?
+  areaReviewed: boolean; // Have you reviewed the work area for hazards?
+  toolsInspected: boolean; // Have you inspected your tools and equipment?
+  ppeRequired: boolean; // Do you have the required PPE for today?
+  controlMeasuresReviewed: boolean; // Have you reviewed the control measures needed today?
+  equipmentInspectionUpToDate: boolean; // Is your equipment inspection up-to-date?
+  emergencyProceduresReviewed: boolean; // Have you reviewed your emergency procedures?
+  flraCompleted: boolean; // Have you completed your FLRA / hazard assessment?
+  permitsInPlace: boolean; // Are all required permits in place (if applicable)?
+  signageInstalled: boolean; // Has all safety signage been installed and checked?
+  crewCommunication: boolean; // Have you communicated with your crew about today's plan?
+  workingAlone: boolean; // Are you working alone today?
+  specialControlsNeeded: boolean; // Is there a need for spotters, barricades, or other special controls?
+  allPermitsForTasks: boolean; // Do you have all required permits for today's tasks?
+  weatherSuitable: boolean; // Is the weather or environmental condition suitable for work?
+  barricadesSignageInstalled: boolean; // Have all necessary barricades, signage, and barriers been installed and are in good condition?
+  knowFirstAidAttendant: boolean; // Do you know who the designated first aid attendant is today?
+  emergencyAccess: boolean; // Do you have clear access to emergency exits and muster points?
+  siteNotices: boolean; // Are you aware of any specific site notices or bulletins today?
 }
 ```
 
@@ -54,27 +56,26 @@ preJobChecklist: {
 
 ```typescript
 ppeAndPlatform: {
-  ppe: {
-    hardhat: boolean;
-    safetyVest: boolean;
-    safetyGlasses: boolean;
-    fallProtection: boolean;
-    coveralls: boolean;
-    gloves: boolean;
-    mask: boolean;
-    respirator: boolean;
-  }
-  platforms: {
-    ladder: boolean;
-    stepBench: boolean;
-    sawhorses: boolean;
-    bakerScaffold: boolean;
-    scaffold: boolean;
-    scissorLift: boolean;
-    boomLift: boolean;
-    swingStage: boolean;
-    hydroLift: boolean;
-  }
+  // Personal Protective Equipment
+  hardhat: boolean; // Hardhat
+  safetyVest: boolean; // Safety Vest
+  safetyGlasses: boolean; // Safety Glasses
+  fallProtection: boolean; // Fall Protection
+  coveralls: boolean; // Coveralls
+  gloves: boolean; // Gloves
+  mask: boolean; // Mask
+  respirator: boolean; // Respirator
+
+  // Equipment Platforms
+  ladder: boolean; // Ladder
+  stepBench: boolean; // Step Bench / Work Bench
+  sawhorses: boolean; // Sawhorses
+  bakerScaffold: boolean; // Baker Scaffold
+  scaffold: boolean; // Scaffold
+  scissorLift: boolean; // Scissor Lift
+  boomLift: boolean; // Boom Lift
+  swingStage: boolean; // Swing Stage
+  hydroLift: boolean; // Hydro Lift
 }
 ```
 
@@ -83,98 +84,70 @@ ppeAndPlatform: {
 ```typescript
 taskHazardControl: {
   entries: Array<{
-    task: string;
-    hazard: string;
-    hazardRisk: number; // 1-10 scale
-    control: string;
-    controlRisk: number; // 1-10 scale
+    task: string; // Task description
+    hazard: string; // Hazard identification
+    hazardRisk: number; // Risk level before controls (1-10)
+    control: string; // Control measure description
+    controlRisk: number; // Risk level after controls (1-10)
   }>;
 }
 ```
 
-**Risk Scale Color Mapping:**
+**Risk Scale**: 1-10 integers
 
-- 1-2: Green (#00e676, #66bb6a)
-- 3-4: Yellow-Green (#cddc39, #ffeb3b)
-- 5-6: Orange (#ffc107, #ff9800)
-- 7-8: Red-Orange (#ff5722, #f44336)
-- 9-10: Deep Red (#e53935, #b71c1c)
+- 1-2: Low Risk (Green)
+- 3-4: Low-Medium Risk (Yellow-Green)
+- 5-6: Medium Risk (Orange)
+- 7-8: High Risk (Red-Orange)
+- 9-10: Critical Risk (Deep Red)
 
-### 5. Signature Module
+### 5. Photos Module
 
 ```typescript
-signatures: {
-  workers: Array<{
-    name: string;
-    signature: string; // base64 signature data
-  }>;
-  supervisor: {
-    name: string;
-    signature: string; // base64 signature data
-  }
-}
+photos: Array<string>; // Array of form_photos.id references (UUIDs)
 ```
 
-### 6. Photo Module (To Be Defined)
+**Storage**: Separate `form_photos` table with Supabase Storage references  
+**Constraints**: Max 5 photos per form, 5MB per photo
+
+### 6. Signatures Module
 
 ```typescript
-photos: {
-  entries: Array<{
-    description: string;
-    imageData: string; // base64 image data or storage URL
-    timestamp: string; // ISO timestamp
-    location?: string; // GPS coordinates if available
-  }>;
-}
+signatures: Array<string>; // Array of form_signatures.id references (UUIDs)
 ```
 
-## JSONB Schema Structure
-
-```sql
--- Complete form_data JSONB structure
-{
-  "modules": {
-    "generalInformation": { ... },
-    "preJobChecklist": { ... },
-    "ppeAndPlatform": { ... },
-    "taskHazardControl": { ... },
-    "signatures": { ... },
-    "photos": { ... }
-  },
-  "metadata": {
-    "version": "1.0",
-    "lastModified": "2024-12-XX",
-    "completionStatus": "draft|complete",
-    "mode": "quickFill|guided"
-  }
-}
-```
-
-## Implementation Notes
-
-### Database Considerations
-
-- Store signatures as base64 strings in JSONB or as separate files in Supabase Storage
-- Photo storage: Supabase Storage with URLs in JSONB vs base64 in JSONB
-- Risk scale values: Store as integers (1-10), calculate colors in frontend
-- Dynamic arrays: Task/Hazard/Control entries and worker signatures
-
-### Validation Rules
-
-- Required fields: All General Information fields
-- Risk scale: Must be 1-10 integers
-- Signatures: Required for form completion
-- Photos: Optional but recommended for hazard documentation
-
-### Frontend Mapping
-
-- HTML form fields map directly to JSONB properties using camelCase
-- Checkbox arrays become boolean object properties
-- Dynamic tables become arrays of objects
-- Canvas signatures become base64 strings
+**Storage**: Separate `form_signatures` table with Supabase Storage references  
+**Constraints**: Max 100KB per signature, unlimited signatures per form  
+**Roles**: Flexible signer roles (worker, supervisor, foreman, safety_officer, management, etc.)
 
 ---
 
-**Created**: December 2024
-**Last Updated**: December 2024
-**Status**: Ready for backend implementation
+## Complete Form Structure
+
+```typescript
+interface FLRAFormData {
+  modules: {
+    generalInformation: GeneralInformationModule;
+    preJobChecklist: PreJobChecklistModule;
+    ppeAndPlatform: PPEAndPlatformModule;
+    taskHazardControl: TaskHazardControlModule;
+    photos: Array<string>;
+    signatures: Array<string>;
+  };
+}
+```
+
+---
+
+## Field Counts
+
+- **General Information**: 9 fields
+- **Pre-Job Checklist**: 20 boolean fields
+- **PPE & Platform**: 17 boolean fields (8 PPE + 9 Platform)
+- **Task/Hazard/Control**: Dynamic array (unlimited entries)
+- **Photos**: Max 5 references
+- **Signatures**: Unlimited references
+
+---
+
+**Total Static Fields**: 46 fields + dynamic arrays
