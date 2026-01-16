@@ -1,7 +1,7 @@
 # Migration Notes & Tracking
 
 **Status**: CRITICAL DOCUMENTATION - DO NOT DELETE  
-**Last Updated**: January 6, 2025  
+**Last Updated**: January 14, 2026  
 **Purpose**: Track all database migrations applied to HrdHat backend
 
 ---
@@ -106,21 +106,92 @@
 
 ### **004_remove_form_number_unique.sql**
 
-- **Status**: ⏳ PENDING (not yet applied)
-- **Date Created**: June 10, 2025
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2025-06-10
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
 - **Purpose**: Remove unique constraint from `form_number` in `form_instances`
-- **Rationale**: Form numbers are user-editable and should not be globally unique. This change allows users to set any form number, including duplicates, as required by business logic and frontend flexibility.
-- **Key Steps**:
-  - Drops the unique constraint (`form_instances_form_number_key`) from the `form_number` column
-  - Leaves the NOT NULL constraint and auto-generation trigger in place
-  - No impact on existing data except allowing duplicates going forward
-- **To Apply**:
-  1. Review migration file thoroughly
-  2. Apply to development environment first and verify
-  3. Update this entry with application status and date
-  4. Apply to production after successful verification
-- **Verification**: _Pending_
-- **Notes**: This migration is required to align backend constraints with frontend and business requirements for flexible form numbering.
+- **Rationale**: Form numbers are user-editable and should not be globally unique
+- **Verification**: ✅ Constraint removed, duplicates now allowed
+- **Notes**: Aligns backend constraints with frontend/business requirements
+
+### **005_supervisor_extension.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-12
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add HrdHat Supervisor extension tables for project management and email intake
+- **Tables Created**:
+  - `supervisor_projects` - Construction sites managed by supervisors
+  - `project_workers` - Workers assigned to projects
+  - `project_folders` - Form type categories for organizing documents
+  - `received_documents` - Email intake documents with AI classification
+- **Key Features**:
+  - Foreign key from `form_instances.project_id` to `supervisor_projects.id`
+  - Row Level Security policies for supervisor access
+  - Supervisor can see forms from workers in their projects (NEW forms only)
+  - Performance indexes on all new tables
+- **Verification Results**:
+  - ✅ 4 tables created with RLS enabled
+  - ✅ FK constraint `form_instances_supervisor_project_fkey` added
+  - ✅ 202 existing forms verified untouched (all have project_id = NULL)
+  - ✅ New tables empty and ready for use
+- **Notes**: First step of HrdHat Supervisor MVP - enables project-based form management
+
+### **006_enable_realtime_received_documents.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-13
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Enable Supabase Realtime for `received_documents` table
+- **Key Features**:
+  - Adds `received_documents` to `supabase_realtime` publication
+  - Enables real-time INSERT, UPDATE, DELETE events for supervisors
+  - Works with existing RLS policies (supervisors only see their projects)
+- **Tables Modified**: None (publication configuration only)
+- **Verification**: ✅ Migration applied successfully with no errors
+- **Notes**: Enables live document feed in Supervisor dashboard
+
+### **007_project_subcontractors.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-14
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add subcontractor management for supervisor projects
+- **Tables Created**:
+  - `project_subcontractors` - Subcontractor companies assigned to projects
+- **Tables Modified**:
+  - `project_workers` - Added `subcontractor_id` column to link workers to subcontractors
+- **Key Features**:
+  - Subcontractor tracking with contact info (name, email, phone)
+  - Unique constraint on (project_id, company_name)
+  - Workers can optionally be linked to subcontractors
+  - RLS policies for supervisor access
+  - Realtime enabled for live dashboard updates
+  - Indexes for efficient queries
+- **Verification**: ✅ Migration applied successfully with no errors
+- **Notes**: Enables subcontractor company management in Supervisor dashboard
+
+### **008_supervisor_access_flag.sql**
+
+- **Status**: ⏳ PENDING - PREPARED FOR FUTURE USE
+- **Date Created**: 2026-01-14
+- **Purpose**: Add `has_supervisor_access` flag to user_profiles for future paywall
+- **Columns Added**:
+  - `user_profiles.has_supervisor_access` - Boolean, default false
+- **Key Features**:
+  - Simple boolean flag for gating supervisor dashboard access
+  - Default false (users don't automatically get access)
+  - Index for efficient lookups when checking access
+  - Ready for integration with Stripe/payment system
+  - Can be used in RLS policies for supervisor feature gating
+- **Notes**: 
+  - DO NOT APPLY until paywall is ready to be implemented
+  - Migration prepared as part of shared session integration work
+  - See migration file comments for usage examples
 
 ---
 
@@ -154,7 +225,11 @@
 | 001_initial_schema.sql             | Dec 2024     | Development | ✅ Applied   | 4 tables      | Core schema with RLS         |
 | 002_add_form_signatures.sql        | 2025-06-06   | Development | ✅ Applied   | +1 table      | Immutable signatures         |
 | 003_seed_default_flra_template.sql | 2025-06-08   | Development | ✅ Applied   | 0 tables      | Seeds stock FLRA template    |
-| 004 & 005 (Cancelled Migrations)   | 2025-06-09   | Development | 🔄 Cancelled | Net: 0 change | Perfect cancellation applied |
+| 004_remove_form_number_unique.sql  | 2025-06-10   | Development | ✅ Applied   | 0 tables      | Removes unique on form_number|
+| 005_supervisor_extension.sql       | 2026-01-12   | Development | ✅ Applied   | +4 tables     | Supervisor project management|
+| 006_enable_realtime_received_documents.sql | 2026-01-13 | Development | ✅ Applied | 0 tables | Enables Realtime for documents|
+| 007_project_subcontractors.sql     | 2026-01-14   | Development | ✅ Applied   | +1 table      | Subcontractor management     |
+| 008_supervisor_access_flag.sql     | Pending      | -           | ⏳ Pending   | 0 tables      | Paywall preparation (future) |
 
 ---
 
