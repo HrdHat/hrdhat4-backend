@@ -194,12 +194,33 @@ Deno.serve(async (req: Request) => {
         matchedFolderId = matchedFolder?.id ?? null
       }
 
-      // 4. Create received_documents record
+      // 4. Try to match document to an active shift
+      let matchedShiftId: string | null = null
+      let matchedShiftWorkerId: string | null = null
+      
+      try {
+        const shiftMatch = await matchDocumentToShift(
+          project.id, 
+          email.from, 
+          classification.extractedData
+        )
+        if (shiftMatch) {
+          matchedShiftId = shiftMatch.shift_id
+          matchedShiftWorkerId = shiftMatch.shift_worker_id
+          console.log(`🔗 Matched to shift: ${matchedShiftId}, worker: ${matchedShiftWorkerId}`)
+        }
+      } catch (matchError) {
+        console.error('⚠️ Shift matching failed:', matchError)
+        // Continue without shift linking
+      }
+
+      // 5. Create received_documents record
       const { data: doc, error: docError } = await supabaseAdmin
         .from('received_documents')
         .insert({
           project_id: project.id,
           folder_id: matchedFolderId,
+          shift_id: matchedShiftId,
           original_filename: attachment.filename,
           storage_path: storagePath,
           file_size: attachment.size,
@@ -218,6 +239,24 @@ Deno.serve(async (req: Request) => {
       if (docError) {
         console.error('❌ Database error:', docError)
         continue
+      }
+
+      // 6. If matched to a shift worker, update their form_submitted status
+      if (matchedShiftWorkerId && doc) {
+        const { error: updateError } = await supabaseAdmin
+          .from('shift_workers')
+          .update({
+            form_submitted: true,
+            form_submitted_at: new Date().toISOString(),
+            document_id: doc.id
+          })
+          .eq('id', matchedShiftWorkerId)
+        
+        if (updateError) {
+          console.error('⚠️ Failed to update shift worker:', updateError)
+        } else {
+          console.log(`✅ Updated shift worker form status: ${matchedShiftWorkerId}`)
+        }
       }
 
       console.log(`✅ Document recorded: ${doc.id}`)
@@ -288,6 +327,111 @@ async function parseEmailFromFormData(formData: FormData): Promise<ParsedEmail> 
   }
 
   return email
+}
+
+/**
+ * Match incoming document to an active shift worker
+ * Tries to match by:
+ * 1. Sender email matching shift_worker email
+ * 2. AI-extracted worker name matching shift_worker name
+ */
+async function matchDocumentToShift(
+  projectId: string,
+  senderEmail: string,
+  extractedData: Record<string, unknown>
+): Promise<{ shift_id: string; shift_worker_id: string } | null> {
+  
+  // Extract email address from "Name <email>" format
+  const emailMatch = senderEmail.match(/<([^>]+)>/)
+  const cleanEmail = emailMatch ? emailMatch[1].toLowerCase() : senderEmail.toLowerCase()
+  
+  console.log(`🔍 Looking for shift worker with email: ${cleanEmail}`)
+  
+  // 1. Try to match by email first (most reliable)
+  const { data: emailMatches } = await supabaseAdmin
+    .from('shift_workers')
+    .select(`
+      id,
+      shift_id,
+      name,
+      email,
+      form_submitted,
+      project_shifts!inner(id, project_id, status)
+    `)
+    .eq('project_shifts.project_id', projectId)
+    .eq('project_shifts.status', 'active')
+    .eq('form_submitted', false)
+    .ilike('email', cleanEmail)
+    .limit(1)
+  
+  if (emailMatches && emailMatches.length > 0) {
+    const match = emailMatches[0]
+    console.log(`✅ Email match found: ${match.name} (${match.id})`)
+    return {
+      shift_id: match.shift_id,
+      shift_worker_id: match.id
+    }
+  }
+  
+  // 2. Try to match by worker name from AI extraction
+  const workerName = extractedData.workerName as string | undefined
+  if (workerName) {
+    console.log(`🔍 Looking for shift worker by name: ${workerName}`)
+    
+    // Use a fuzzy match - check if the extracted name contains the shift worker name or vice versa
+    const { data: allActiveWorkers } = await supabaseAdmin
+      .from('shift_workers')
+      .select(`
+        id,
+        shift_id,
+        name,
+        form_submitted,
+        project_shifts!inner(id, project_id, status)
+      `)
+      .eq('project_shifts.project_id', projectId)
+      .eq('project_shifts.status', 'active')
+      .eq('form_submitted', false)
+    
+    if (allActiveWorkers && allActiveWorkers.length > 0) {
+      // Normalize names for comparison
+      const normalizedExtracted = workerName.toLowerCase().trim()
+      
+      for (const worker of allActiveWorkers) {
+        const normalizedWorkerName = worker.name.toLowerCase().trim()
+        
+        // Check if names match (either exact or one contains the other)
+        if (
+          normalizedExtracted === normalizedWorkerName ||
+          normalizedExtracted.includes(normalizedWorkerName) ||
+          normalizedWorkerName.includes(normalizedExtracted)
+        ) {
+          console.log(`✅ Name match found: ${worker.name} (${worker.id})`)
+          return {
+            shift_id: worker.shift_id,
+            shift_worker_id: worker.id
+          }
+        }
+      }
+    }
+  }
+  
+  // 3. If no specific match, check if there's a single active shift for this project
+  // and return just the shift_id (without a specific worker)
+  const { data: activeShifts } = await supabaseAdmin
+    .from('project_shifts')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('status', 'active')
+  
+  if (activeShifts && activeShifts.length === 1) {
+    console.log(`📋 Single active shift found, linking document to shift: ${activeShifts[0].id}`)
+    // Note: We only return shift_id, not shift_worker_id since we couldn't match a specific worker
+    // The caller should handle this case and NOT update shift_workers
+    return null // Return null to indicate we found a shift but no specific worker
+  }
+  
+  console.log(`❌ No shift match found`)
+  return null
 }
 
 /**

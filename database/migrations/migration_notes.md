@@ -1,7 +1,7 @@
 # Migration Notes & Tracking
 
 **Status**: CRITICAL DOCUMENTATION - DO NOT DELETE  
-**Last Updated**: January 14, 2026  
+**Last Updated**: January 16, 2026  
 **Purpose**: Track all database migrations applied to HrdHat backend
 
 ---
@@ -193,6 +193,53 @@
   - Migration prepared as part of shared session integration work
   - See migration file comments for usage examples
 
+### **009_project_shifts.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-16
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add shift management for supervisor projects (Start of Shift feature)
+- **Tables Created**:
+  - `project_shifts` - Work shifts for projects with scheduling and closeout tracking
+  - `shift_workers` - Workers assigned to shifts with notification and form submission tracking
+- **Tables Modified**:
+  - `received_documents` - Added `shift_id` column to link documents to shifts
+- **Key Features**:
+  - Flexible shift naming (e.g., "Morning - Jan 16", "Night Shift")
+  - Worker assignment with registered users or ad-hoc contacts
+  - Notification tracking (SMS/email status)
+  - Form submission tracking per worker
+  - Shift closeout with checklist and notes
+  - RLS policies for supervisor access
+  - Realtime enabled for live dashboard updates
+  - Comprehensive indexes for efficient queries
+- **Verification**: ✅ Migration applied successfully with no errors
+- **Notes**: Core database structure for Start of Shift feature
+
+### **010_add_worker_contact_fields.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-16
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add worker contact fields to FLRA form template's General Information module
+- **Tables Modified**:
+  - `form_definitions` - Updated `definition_jsonb` for FLRA templates
+- **Fields Added to generalInformation module**:
+  - `worker_phone` - Worker's phone number (optional, autofill from profile)
+  - `worker_email` - Worker's email address (optional, autofill from profile)
+  - `company_name` - Company/Subcontractor name (optional, autofill from profile)
+- **Key Features**:
+  - All new fields are optional (required: false)
+  - All new fields support autofill from user_profiles table
+  - Existing form instances are unaffected (use their saved form_data)
+  - New forms will include these fields automatically
+- **Frontend Changes**:
+  - Updated `formService.ts` getAutofillData() to map profile fields to form fields
+- **Verification**: ✅ Migration applied successfully, fields confirmed in template
+- **Notes**: Enables workers to include their contact information on forms
+
 ---
 
 ## 🔄 Migration Application Process
@@ -230,6 +277,8 @@
 | 006_enable_realtime_received_documents.sql | 2026-01-13 | Development | ✅ Applied | 0 tables | Enables Realtime for documents|
 | 007_project_subcontractors.sql     | 2026-01-14   | Development | ✅ Applied   | +1 table      | Subcontractor management     |
 | 008_supervisor_access_flag.sql     | Pending      | -           | ⏳ Pending   | 0 tables      | Paywall preparation (future) |
+| 009_project_shifts.sql             | 2026-01-16   | Development | ✅ Applied   | +2 tables     | Start of Shift feature       |
+| 010_add_worker_contact_fields.sql  | 2026-01-16   | Development | ✅ Applied   | 0 tables      | Worker contact fields in form|
 
 ---
 
