@@ -1,7 +1,7 @@
 # Migration Notes & Tracking
 
 **Status**: CRITICAL DOCUMENTATION - DO NOT DELETE  
-**Last Updated**: January 16, 2026  
+**Last Updated**: January 20, 2026 (014_add_observation_log_type applied)  
 **Purpose**: Track all database migrations applied to HrdHat backend
 
 ---
@@ -240,6 +240,83 @@
 - **Verification**: ✅ Migration applied successfully, fields confirmed in template
 - **Notes**: Enables workers to include their contact information on forms
 
+### **011_supervisor_contacts.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-16
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add global contacts list for supervisors (discovered from forms)
+- **Tables Created**:
+  - `supervisor_contacts` - Global contacts per supervisor
+- **Key Features**:
+  - Name, email, phone, company tracking
+  - Source tracking (manual vs discovered from AI)
+  - Recent project tracking for sorting/filtering
+  - Unique constraint on supervisor + email + name
+  - RLS policies for supervisor-only access
+- **Verification**: ✅ Migration applied successfully
+- **Notes**: Enables contact discovery from submitted forms
+
+### **012_shift_tasks_notes.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-19
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add shift tasks and notes functionality for supervisor daily planning
+- **Columns Added to project_shifts**:
+  - `shift_tasks JSONB` - Checkable to-do items [{id, category, content, checked, created_at}]
+  - `shift_notes JSONB` - Text notes [{id, category, content, created_at}]
+  - `custom_categories JSONB` - User-defined categories [{id, name, color}]
+- **Key Features**:
+  - Task and note organization by category (safety, quality, production, general)
+  - Checkable tasks for shift to-do tracking
+  - Custom category support beyond presets
+  - Supervisor-only visibility (not sent to workers)
+- **Verification**: ✅ Migration applied successfully
+- **Notes**: Enables daily planning and note-taking for supervisors
+
+### **013_project_daily_reports.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-19
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add daily logging and Project Daily Report (PDR) functionality
+- **Tables Created**:
+  - `project_daily_logs` - Daily log entries for visitors, deliveries, site issues, manpower, schedule/delays
+  - `project_daily_reports` - Generated PDRs with weather and summary data
+- **Key Features**:
+  - Five log types: visitor, delivery, site_issue, manpower, schedule_delay
+  - JSONB metadata for type-specific fields (visitor name/company, delivery supplier, etc.)
+  - Site issue status tracking: active, resolved, continued
+  - Weather data capture: conditions, temperature, wind, precipitation
+  - RLS policies for supervisor-only access
+  - Realtime enabled for live dashboard updates
+  - Performance indexes for date-based queries
+- **Verification**: ✅ Migration applied successfully
+- **Notes**: Enables daily logging throughout the day and end-of-day PDR generation
+
+### **014_add_observation_log_type.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-20
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add 'observation' to the project_daily_logs.log_type constraint
+- **Tables Modified**:
+  - `project_daily_logs` - Updated log_type check constraint
+- **Key Features**:
+  - Six log types now supported: visitor, delivery, site_issue, manpower, schedule_delay, observation
+  - Observation type supports location, area, and photo attachment metadata
+  - Enables supervisors to log visual observations with photos
+- **Constraint Updated**:
+  - Old: `log_type = ANY (ARRAY['visitor', 'delivery', 'site_issue', 'manpower', 'schedule_delay'])`
+  - New: `log_type = ANY (ARRAY['visitor', 'delivery', 'site_issue', 'manpower', 'schedule_delay', 'observation'])`
+- **Verification**: ✅ Migration applied successfully via MCP
+- **Notes**: Completes the observation feature by enabling database storage
+
 ---
 
 ## 🔄 Migration Application Process
@@ -279,6 +356,10 @@
 | 008_supervisor_access_flag.sql     | Pending      | -           | ⏳ Pending   | 0 tables      | Paywall preparation (future) |
 | 009_project_shifts.sql             | 2026-01-16   | Development | ✅ Applied   | +2 tables     | Start of Shift feature       |
 | 010_add_worker_contact_fields.sql  | 2026-01-16   | Development | ✅ Applied   | 0 tables      | Worker contact fields in form|
+| 011_supervisor_contacts.sql        | 2026-01-16   | Development | ✅ Applied   | +1 table      | Global supervisor contacts   |
+| 012_shift_tasks_notes.sql          | 2026-01-19   | Development | ✅ Applied   | 0 tables      | Shift tasks and notes JSONB  |
+| 013_project_daily_reports.sql      | 2026-01-19   | Development | ✅ Applied   | +2 tables     | Daily logs & PDR generation  |
+| 014_add_observation_log_type.sql   | 2026-01-20   | Development | ✅ Applied   | 0 tables      | Add observation to log types |
 
 ---
 
