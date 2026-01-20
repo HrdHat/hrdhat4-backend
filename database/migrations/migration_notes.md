@@ -1,7 +1,7 @@
 # Migration Notes & Tracking
 
 **Status**: CRITICAL DOCUMENTATION - DO NOT DELETE  
-**Last Updated**: January 20, 2026 (014_add_observation_log_type applied)  
+**Last Updated**: January 20, 2026 (016_fix_set_template_id_trigger applied)  
 **Purpose**: Track all database migrations applied to HrdHat backend
 
 ---
@@ -317,6 +317,49 @@
 - **Verification**: ✅ Migration applied successfully via MCP
 - **Notes**: Completes the observation feature by enabling database storage
 
+### **015_supervisor_forms_flexibility.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-20
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Allow form_instances to work without formal form_definitions (supervisor forms)
+- **Tables Modified**:
+  - `form_instances` - Schema flexibility changes
+- **Key Features**:
+  - `form_definition_id` now allows NULL (supervisor forms don't need definitions)
+  - `form_definition_version` now allows NULL
+  - `template_id` changed from UUID to TEXT (supports string IDs like 'toolbox_talk')
+  - Dropped `form_definition_version_exists` constraint
+  - Dropped `template_id_consistency` constraint
+  - Added index on `template_id` for TEXT queries
+- **Rationale**:
+  - Supervisor app creates forms directly without form_definitions records
+  - Form UI is hardcoded in React for supervisor forms (toolbox_talk, weekly_inspection, worker_orientation)
+  - Worker forms continue to use form_definitions as before (UUID template_id cast to TEXT)
+- **Verification**: ✅ Migration applied successfully via MCP
+- **Notes**: Enables supervisor forms to be created and saved properly
+
+### **016_fix_set_template_id_trigger.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-20
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Fix set_template_id trigger to support supervisor forms without form_definitions
+- **Functions Modified**:
+  - `set_template_id()` - Trigger function for form_instances
+- **Key Features**:
+  - Only looks up template_id from form_definitions when form_definition_id IS NOT NULL
+  - Keeps provided template_id when form_definition_id is NULL (supervisor forms)
+  - Still validates that template_id is always provided (either way)
+- **Rationale**:
+  - Previous trigger always tried to lookup from form_definitions, failing for supervisor forms
+  - Supervisor forms provide template_id directly ('toolbox_talk', 'worker_orientation', etc.)
+  - Worker forms continue to work via form_definitions lookup
+- **Verification**: ✅ Migration applied successfully via MCP
+- **Notes**: Completes the supervisor forms fix (companion to 015_supervisor_forms_flexibility)
+
 ---
 
 ## 🔄 Migration Application Process
@@ -360,6 +403,8 @@
 | 012_shift_tasks_notes.sql          | 2026-01-19   | Development | ✅ Applied   | 0 tables      | Shift tasks and notes JSONB  |
 | 013_project_daily_reports.sql      | 2026-01-19   | Development | ✅ Applied   | +2 tables     | Daily logs & PDR generation  |
 | 014_add_observation_log_type.sql   | 2026-01-20   | Development | ✅ Applied   | 0 tables      | Add observation to log types |
+| 015_supervisor_forms_flexibility.sql | 2026-01-20 | Development | ✅ Applied   | 0 tables      | Allow supervisor forms without definitions |
+| 016_fix_set_template_id_trigger.sql | 2026-01-20 | Development | ✅ Applied   | 0 tables      | Fix trigger for supervisor forms |
 
 ---
 
