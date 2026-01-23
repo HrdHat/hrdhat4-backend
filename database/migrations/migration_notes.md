@@ -1,7 +1,7 @@
 # Migration Notes & Tracking
 
 **Status**: CRITICAL DOCUMENTATION - DO NOT DELETE  
-**Last Updated**: January 20, 2026 (016_fix_set_template_id_trigger applied)  
+**Last Updated**: January 23, 2026 (017_add_worker_forms_index applied)  
 **Purpose**: Track all database migrations applied to HrdHat backend
 
 ---
@@ -405,6 +405,26 @@
 | 014_add_observation_log_type.sql   | 2026-01-20   | Development | ✅ Applied   | 0 tables      | Add observation to log types |
 | 015_supervisor_forms_flexibility.sql | 2026-01-20 | Development | ✅ Applied   | 0 tables      | Allow supervisor forms without definitions |
 | 016_fix_set_template_id_trigger.sql | 2026-01-20 | Development | ✅ Applied   | 0 tables      | Fix trigger for supervisor forms |
+| 017_add_worker_forms_index.sql     | 2026-01-23   | Development | ✅ Applied   | 0 tables      | Partial index for worker form queries |
+
+---
+
+### **017_add_worker_forms_index.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-23
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add partial index to optimize Frontend queries for worker forms
+- **Description**: Creates a partial index on `form_instances` for rows where `project_id IS NULL` (worker forms). This optimizes the limit-checking query in HrdHat Frontend when counting active worker forms.
+- **Tables Modified**: None (index only)
+- **Key Features**:
+  - Partial index: `idx_form_instances_worker_forms ON form_instances(created_by, status) WHERE project_id IS NULL`
+  - Complements existing `idx_form_instances_project_id_supervisor` index for supervisor forms
+  - Improves query performance for form limit checks in Frontend
+- **Dependencies**: 001_initial_schema.sql (form_instances table)
+- **Verification**: Index verified via pg_indexes query
+- **Risk Level**: Low (index creation, no schema changes)
 
 ---
 
