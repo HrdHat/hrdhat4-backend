@@ -1,7 +1,7 @@
 # Migration Notes & Tracking
 
 **Status**: CRITICAL DOCUMENTATION - DO NOT DELETE  
-**Last Updated**: January 23, 2026 (017_add_worker_forms_index applied)  
+**Last Updated**: January 29, 2026 (018_notes_and_meeting_minutes applied)  
 **Purpose**: Track all database migrations applied to HrdHat backend
 
 ---
@@ -406,6 +406,7 @@
 | 015_supervisor_forms_flexibility.sql | 2026-01-20 | Development | ✅ Applied   | 0 tables      | Allow supervisor forms without definitions |
 | 016_fix_set_template_id_trigger.sql | 2026-01-20 | Development | ✅ Applied   | 0 tables      | Fix trigger for supervisor forms |
 | 017_add_worker_forms_index.sql     | 2026-01-23   | Development | ✅ Applied   | 0 tables      | Partial index for worker form queries |
+| 018_notes_and_meeting_minutes.sql  | 2026-01-29   | Development | ✅ Applied   | 0 tables      | Add note and meeting_minutes log types |
 
 ---
 
@@ -425,6 +426,24 @@
 - **Dependencies**: 001_initial_schema.sql (form_instances table)
 - **Verification**: Index verified via pg_indexes query
 - **Risk Level**: Low (index creation, no schema changes)
+
+### **018_notes_and_meeting_minutes.sql**
+
+- **Status**: ✅ SUCCESSFULLY APPLIED
+- **Date Applied**: 2026-01-29
+- **Applied To**: HrdHat's Project v4 (ybonzpfwdcyxbzxkyeji)
+- **Applied By**: AI Assistant (via MCP Supabase connection)
+- **Purpose**: Add 'note' and 'meeting_minutes' log types to project_daily_logs
+- **Tables Modified**: `project_daily_logs` (constraint update only)
+- **Key Features**:
+  - Added `note` log type for quick supervisor notes with categories
+  - Added `meeting_minutes` log type for meeting documentation with attendees
+  - Note categories: phone, email, drawing, follow_up, safety, quality, change_order
+  - Meeting types: safety_briefing, progress, coordination, owner, subcontractor, preconstruction, kickoff, closeout, inspection, design, site_walk, general, other
+  - Now supports 8 log types total
+- **Dependencies**: 014_add_observation_log_type.sql
+- **Verification**: Migration applied successfully via MCP
+- **Risk Level**: Low (constraint update, no schema changes)
 
 ---
 
